@@ -5,8 +5,8 @@
 // @description 在AtCoder比赛中预测perf
 // @description:en    Predict AtCoder's performance during the contest
 // @description:ja コンテスト中にAtCoderのパフォーマンスを予測します
-// @downloadURL    https://github.com/zyx201207/ac-predictor-zh.user.js
-// @downloadURL    https://github.com/zyx201207/ac-predictor-zh.meta.js
+// @downloadURL    https://github.com/zyx201207/ac-predictor-zh/blob/main/ac-predictor-zh.user.js
+// @downloadURL    https://github.com/zyx201207/ac-predictor-zh/blob/main/ac-predictor-zh.meta.js
 // @author         zyx2012
 // @match          https://atcoder.jp/*
 // @exclude        /^https://atcoder\.jp/[^#?]*/json/
