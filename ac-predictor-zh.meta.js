@@ -2,6 +2,7 @@
 // ==UserScript==
 // @name           ac-predictor-zh
 // @name:ja        ac-predictor-zh
+// @namespace      https://github.com/zyx201207/ac-predictor-zh
 // @version        1.0.5
 // @description 在AtCoder比赛中预测perf
 // @description:en    Predict AtCoder's performance during the contest
