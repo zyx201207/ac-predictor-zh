@@ -1,22 +1,24 @@
+
 // ==UserScript==
 // @name           ac-predictor-zh
 // @name:ja        ac-predictor-zh
-// @version        1.0.4
+// @version        1.0.5
 // @description 在AtCoder比赛中预测perf
 // @description:en    Predict AtCoder's performance during the contest
 // @description:ja コンテスト中にAtCoderのパフォーマンスを予測します
-// @downloadURL    https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.user.js
-// @updateURL      https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.meta.js
+// @downloadURL    https://github.com/zyx201207/ac-predictor-zh/blob/main/ac-predictor-zh.user.js
+// @downloadURL    https://github.com/zyx201207/ac-predictor-zh/blob/main/ac-predictor-zh.meta.js
 // @author         zyx2012
 // @match          https://atcoder.jp/*
 // @exclude        /^https://atcoder\.jp/[^#?]*/json/
 // @grant          none
+// @icon        https://atcoder.jp/favicon.ico
 // ==/UserScript==
 
 // namespace      http://ac-predictor.azurewebsites.net/
 // downloadURL https://update.greasyfork.icu/scripts/369954/ac-predictor.user.js
 // updateURL https://update.greasyfork.icu/scripts/369954/ac-predictor.meta.js
-//Based on ac-predictor 2.0.12,Modifyed by zyx2012 for ac-predictor-zh 1.0.2.
+//Based on ac-predictor 2.0.12,Modifyed by zyx2012 for ac-predictor-zh 1.0.5.
 
 var config_header_text = "ac-predictor settings";
 var config_hideDuringContest_label = "在比赛期间隐藏预测";
@@ -25,7 +27,11 @@ var config_useFinalResultOnVirtual_label = "在虚拟参赛时使用最终结果
 var config_useFinalResultOnVirtual_description = "勾选此项，将计算perf时假设当时的参赛者已经完成比赛";
 var config_close_estimator = "隐藏侧边栏";
 var config_no_image = "隐藏rating前的等级图片";
-var config_dropdown = "ac-predictor settings";
+var config_usefirstStyle = "使用风格1显示rating变化";
+var config_usefirstStyle_description = "勾选此项，将使用默认风格显示rating变化";
+var config_useSecondStyle = "使用风格2显示rating变化";
+var config_useSecondStyle_description = "勾选此项，将使用第二风格显示rating变化";
+var config_dropdown = "ac-predictor 设置";
 var standings_performance_column_label = "perf";
 var standings_rate_change_column_label = "rating delta";
 var standings_click_to_compute_label = "点击计算";
@@ -38,26 +44,17 @@ var enJson = {
     config_useFinalResultOnVirtual_description: config_useFinalResultOnVirtual_description,
     config_close_estimator: config_close_estimator,
     config_no_image: config_no_image,
+    config_usefirstStyle: config_usefirstStyle,
+    config_usefirstStyle_description: config_usefirstStyle_description,
+    config_useSecondStyle: config_useSecondStyle,
+    config_useSecondStyle_description: config_useSecondStyle_description,
     config_dropdown: config_dropdown,
     standings_performance_column_label: standings_performance_column_label,
     standings_rate_change_column_label: standings_rate_change_column_label,
     standings_click_to_compute_label: standings_click_to_compute_label,
     standings_not_provided_label: standings_not_provided_label
 };
-var jaJson = {
-    config_header_text: config_header_text,
-    config_hideDuringContest_label: config_hideDuringContest_label,
-    config_hideUntilFixed_label: config_hideUntilFixed_label,
-    config_useFinalResultOnVirtual_label: config_useFinalResultOnVirtual_label,
-    config_useFinalResultOnVirtual_description: config_useFinalResultOnVirtual_description,
-    config_close_estimator: config_close_estimator,
-    config_no_image: config_no_image,
-    config_dropdown: config_dropdown,
-    standings_performance_column_label: standings_performance_column_label,
-    standings_rate_change_column_label: standings_rate_change_column_label,
-    standings_click_to_compute_label: standings_click_to_compute_label,
-    standings_not_provided_label: standings_not_provided_label
-};
+var jaJson = enJson;
 
 // should not be here
 function getCurrentLanguage() {
@@ -93,7 +90,9 @@ const defaultConfig = {
     isDebug: false,
     hideUntilFixed: false,
     close_estimator: false,
-    no_image: false,
+    no_image: true,
+    usefirstStyle: true,
+    useSecondStyle: false,
     useFinalResultOnVirtual: false,
     compareComputations: false
 };
@@ -120,6 +119,10 @@ function setConfig(key, value) {
 //    alert(key + ' ' + config[key]);
     config[key] = value;
     storeConfigObj(config);
+}
+function SetConfig(key1,key2,value){
+    setConfig(key1,value);
+    setConfig(key2,!value);
 }
 
 const isDebug = location.hash.includes("ac-predictor-debug") || getConfig("isDebug");
@@ -191,6 +194,8 @@ class ConfigController {
         configView.addCheckbox(getTranslation("config_hideUntilFixed_label"), getConfig("hideUntilFixed"), null, val => setConfig("hideUntilFixed", val));
         configView.addCheckbox(getTranslation("config_close_estimator"), getConfig("close_estimator"), null, val => setConfig("close_estimator", val));
         configView.addCheckbox(getTranslation("config_no_image"), getConfig("no_image"), null, val => setConfig("no_image", val));
+        configView.addCheckbox(getTranslation("config_usefirstStyle"), getConfig("usefirstStyle"), getTranslation("config_usefirstStyle_description"), val => SetConfig("usefirstStyle", "useSecondStyle", val));
+        configView.addCheckbox(getTranslation("config_useSecondStyle"), getConfig("useSecondStyle"), getTranslation("config_useSecondStyle_description"), val => SetConfig("useSecondStyle", "usefirstStyle", val));
         if (isDebugMode()) {
             configView.addCheckbox("[DEBUG] enable debug mode", getConfig("isDebug"), null, val => setConfig("isDebug", val));
             configView.addCheckbox("[DEBUG] use results", getConfig("useResults"), null, val => setConfig("useResults", val));
@@ -798,9 +803,14 @@ function getDifferenceString(newr,oldr){
     if (newr == oldr) return "±0";
     return toSignedString(newr - oldr);
 }
+function getBr(span){
+    const elem = document.createElement("br");
+    elem.append(span);
+    return elem;
+}
 function GetSpan(span1,span2){
-    const elem = document.createElement("div");
-    elem.append(span1,document.createElement("br"),span2);
+    const elem = document.createElement("span");
+    elem.append(span1,getBr(span2));
     return elem;
 }
 function getBigSpan(result){
@@ -825,16 +835,38 @@ function getImage(rating){
     ans += `.png" class="user-rating-stage-s"/>`;
     return ans;
 }//*/
+function getBigDiv(span){
+    const elem = document.createElement("div");
+    elem.append(span);
+    elem.classList.add("big");
+    return elem;
+}
+function MergeSpan(span1,span2){
+    const ret = document.createElement("span");
+    ret.append(span1,getBigDiv(span2));
+    return ret;
+}
 
 function getRatedRatingElem(result) {
     const elem = document.createElement("div");
+    if (!getConfig("useSecondStyle")){
+        elem.innerHTML += getImage(result.oldRating);
+        elem.append(getRatingSpan(result.oldRating));
+        elem.append(getStrongSpan(getSpan(result.oldRating == result.newRating?" → ":(result.oldRating < result.newRating?" ↗ ":" ↘ "),
+                [(result.oldRating == result.newRating?"grey":(result.oldRating < result.newRating?"green":"red"))])));
+        elem.innerHTML += getImage(result.newRating);
+        elem.append(getRatingSpan(result.newRating), " ",
+            getSpan([`(${getDifferenceString(result.newRating,result.oldRating)})`],[(result.oldRating == result.newRating?"grey":(result.oldRating < result.newRating?"green":"red"))]));
+        return elem;
+    }
+    elem.style = "display: flex; gap: 1px; justify-content: center; align-items: center;";
     elem.innerHTML += getImage(result.oldRating);
     elem.append(getRatingSpan(result.oldRating));
-    elem.append(getStrongSpan(getSpan(result.oldRating == result.newRating?" → ":(result.oldRating < result.newRating?" ↗ ":" ↘ "),
-            [(result.oldRating == result.newRating?"grey":(result.oldRating < result.newRating?"green":"red"))])));
+    elem.append(MergeSpan(getSpan(getDifferenceString(result.newRating,result.oldRating),[(result.oldRating == result.newRating?"grey":(result.oldRating < result.newRating?"green":"red")),"small"]),
+        getStrongSpan(getSpan(result.oldRating == result.newRating?"→":(result.oldRating < result.newRating?"↗":"↘"),
+                [(result.oldRating == result.newRating?"grey":(result.oldRating < result.newRating?"green":"red")),"big"]))));
     elem.innerHTML += getImage(result.newRating);
-    elem.append(getRatingSpan(result.newRating), " ",
-        getSpan([`(${getDifferenceString(result.newRating,result.oldRating)})`],[(result.oldRating == result.newRating?"grey":(result.oldRating < result.newRating?"green":"red"))]));
+    elem.append(getRatingSpan(result.newRating));
     return elem;
 }
 function getUnratedRatingElem(result) {
@@ -1789,8 +1821,8 @@ function isStandingsPage() {
     return /^\/contests\/[^/]*\/standings\/?$/.test(document.location.pathname);
 }
 
+const controller = new ConfigController();
 {
-    const controller = new ConfigController();
     controller.register();
     if (!getConfig("close_estimator"))
         add();
@@ -1807,6 +1839,3 @@ if (isExtendedStandingsPage()) {
     const controller = new ExtendedStandingsPageController();
     controller.register();
 }
-
-
-
