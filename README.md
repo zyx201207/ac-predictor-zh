@@ -1,4 +1,4 @@
-# ac-predictor-zh <sub>v1.0.5</sub>
+# ac-predictor-zh <sub> v1.0.5</sub>
 ac-predictor最新汉化版，用以在AtCoder比赛进行中进行rating变化预测。
 
 添加`隐藏侧边栏`等功能，并对 rating 变化箭头进行了美化，比赛排行榜可以使用两种不同的风格来显示rating变化，对大部分内容进行了汉化。
@@ -12,6 +12,8 @@ ac-predictor最新汉化版，用以在AtCoder比赛进行中进行rating变化�
 ## 说明
 
 对大部分常见内容进行了人工翻译，不过尚有未尽内容未完成翻译，**欢迎大家[前来反馈](https://github.com/zyx201207/ac-predictor-zh/issues)！**
+
+目前，除 v1.0.5 以外，其余版本均无法正常更新~~因为编写这些版本的脚本时我不会写接收更新部分~~，所以请务必使用最新版，否则，您将无法受到未来的更新！
 
 ## 食用方法
 
