@@ -1,4 +1,4 @@
-# ac-predictor-zh <sub>v1.0.5</sub>
+# ac-predictor-zh <sub>v1.0.5<sub>——青出于蓝而胜于蓝</sub></sub>
 ac-predictor最新汉化版，用以在AtCoder比赛进行中进行rating变化预测。
 
 添加`隐藏侧边栏`等功能，并对 rating 变化箭头进行了美化，比赛排行榜可以使用两种不同的风格来显示rating变化，对大部分内容进行了汉化。
@@ -8,8 +8,6 @@ ac-predictor最新汉化版，用以在AtCoder比赛进行中进行rating变化�
 感谢[@key-moon](https://github.com/key-moon)提供[原版脚本](https://github.com/key-moon/ac-predictor)。
 
 另外，[ac-predictor-cn-ez](https://github.com/Gary-0925/ac-predictor-cn-ez/)也是一个不错的选择。
-
-虽然是基于 ac-predictor 改的，不过，我相信，我的 ac-predictor-zh 一定能青出于蓝而胜于蓝！
 
 ## 说明
 
