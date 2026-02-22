@@ -33,7 +33,7 @@ ac-predictor最新汉化版，用以在AtCoder比赛进行中进行rating变化�
 
 前往[这里](https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.user.js)安装脚本。
 
-由于GreasyFork在中国大陆被封锁，我们没有在GreasyFork上发布此脚本。
+~~由于GreasyFork在中国大陆被封锁，我们没有在GreasyFork上发布此脚本~~也可以从[GreasyFork](https://greasyfork.org/zh-CN/scripts/567082-ac-predictor-zh)获取该脚本。
 
 ### 3. 测试是否安装成功
 
