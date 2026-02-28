@@ -1,4 +1,4 @@
-# ac-predictor-zh <sub>v1.0.5<sub>——青，取之于蓝，而青于蓝</sub></sub>
+# ac-predictor-zh <sub>v1.0.6<sub>——青，取之于蓝，而青于蓝</sub></sub>
 ac-predictor最新汉化版，用以在AtCoder比赛进行中进行rating变化预测。
 
 添加`隐藏侧边栏`等功能，并对 rating 变化箭头进行了美化，比赛排行榜可以使用两种不同的风格来显示rating变化，对大部分内容进行了汉化。
