@@ -3,7 +3,8 @@
 // @name           ac-predictor-zh
 // @name:ja        ac-predictor-zh
 // @namespace      https://github.com/zyx201207/ac-predictor-zh
-// @version        1.0.5
+// @version        1.0.6
+// @license        MIT
 // @description 在AtCoder比赛中预测perf
 // @description:en    Predict AtCoder's performance during the contest
 // @description:ja コンテスト中にAtCoderのパフォーマンスを予測します
@@ -819,9 +820,14 @@ function getBigSpan(result){
     elem.append(result);
     return elem;
 }
-function getStrongSpan(result){
+function getStrongSpan(result,b = 0){
     const elem = document.createElement("strong");
-    elem.append(getBigSpan(result));
+
+    if (!b)
+        elem.append(getBigSpan(result));
+    else
+        elem.append(getStrongSpan(result,b - 1));
+
     return elem;
 }
 function getImage(rating){
@@ -836,16 +842,26 @@ function getImage(rating){
     ans += `.png" class="user-rating-stage-s"/>`;
     return ans;
 }//*/
-function getBigDiv(span){
-    const elem = document.createElement("div");
-    elem.append(span);
-    elem.classList.add("big");
+function getBig(span,v){
+    const elem = document.createElement("big");
+
+    if (!v)
+        elem.append(span);
+    else
+        elem.append(getBig(span,v - 1));
+
     return elem;
 }
 function MergeSpan(span1,span2){
     const ret = document.createElement("span");
-    ret.append(span1,getBigDiv(span2));
+    ret.append(span1,span2);
     return ret;
+}
+function getDiv(span){
+    const elem = document.createElement("div");
+    elem.style="transform: translateY(-35%);";
+    elem.append(span);
+    return elem;
 }
 
 function getRatedRatingElem(result) {
@@ -864,8 +880,8 @@ function getRatedRatingElem(result) {
     elem.innerHTML += getImage(result.oldRating);
     elem.append(getRatingSpan(result.oldRating));
     elem.append(MergeSpan(getSpan(getDifferenceString(result.newRating,result.oldRating),[(result.oldRating == result.newRating?"grey":(result.oldRating < result.newRating?"green":"red")),"small"]),
-        getStrongSpan(getSpan(result.oldRating == result.newRating?"→":(result.oldRating < result.newRating?"↗":"↘"),
-                [(result.oldRating == result.newRating?"grey":(result.oldRating < result.newRating?"green":"red")),"big"]))));
+        getDiv(getStrongSpan(getBig(getSpan(result.oldRating == result.newRating?"→":(result.oldRating < result.newRating?"↗":"↘"),
+                [(result.oldRating == result.newRating?"grey":(result.oldRating < result.newRating?"green":"red")),"big"]),(result.oldRating == result.newRating?0:0)),result.oldRating == result.newRating))));
     elem.innerHTML += getImage(result.newRating);
     elem.append(getRatingSpan(result.newRating));
     return elem;
