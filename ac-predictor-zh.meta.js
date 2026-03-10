@@ -1,20 +1,19 @@
-
 // ==UserScript==
 // @name           ac-predictor-zh
 // @name:ja        ac-predictor-zh
 // @namespace      https://github.com/zyx201207/ac-predictor-zh
-// @version        1.0.6
+// @version        2.0.12.1
 // @license        MIT
 // @description 在AtCoder比赛中预测perf
 // @description:en    Predict AtCoder's performance during the contest
 // @description:ja コンテスト中にAtCoderのパフォーマンスを予測します
-// @downloadURL    https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.user.js
-// @updateURL      https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.meta.js
 // @author         zyx2012
 // @match          https://atcoder.jp/*
 // @exclude        /^https://atcoder\.jp/[^#?]*/json/
 // @grant          none
 // @icon        https://atcoder.jp/favicon.ico
+// @downloadURL    https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.user.js
+// @updateURL      https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.meta.js
 // ==/UserScript==
 
 // namespace      http://ac-predictor.azurewebsites.net/
@@ -22,7 +21,7 @@
 // updateURL https://update.greasyfork.icu/scripts/369954/ac-predictor.meta.js
 //Based on ac-predictor 2.0.12,Modifyed by zyx2012 for ac-predictor-zh 1.0.5.
 
-var config_header_text = "ac-predictor settings";
+var config_header_text = "ac-predictor-zh 设置";
 var config_hideDuringContest_label = "在比赛期间隐藏预测";
 var config_hideUntilFixed_label = "在perf确定之前隐藏预测";
 var config_useFinalResultOnVirtual_label = "在虚拟参赛时使用最终结果进行perf计算";
@@ -33,7 +32,8 @@ var config_usefirstStyle = "使用风格1显示rating变化";
 var config_usefirstStyle_description = "勾选此项，将使用默认风格显示rating变化";
 var config_useSecondStyle = "使用风格2显示rating变化";
 var config_useSecondStyle_description = "勾选此项，将使用第二风格显示rating变化";
-var config_dropdown = "ac-predictor 设置";
+var config_shouRatingBeforeContest = "在比赛开始前显示 rating";
+var config_dropdown = "ac-predictor-zh 设置";
 var standings_performance_column_label = "perf";
 var standings_rate_change_column_label = "rating delta";
 var standings_click_to_compute_label = "点击计算";
@@ -50,6 +50,7 @@ var enJson = {
     config_usefirstStyle_description: config_usefirstStyle_description,
     config_useSecondStyle: config_useSecondStyle,
     config_useSecondStyle_description: config_useSecondStyle_description,
+    config_shouRatingBeforeContest: config_shouRatingBeforeContest,
     config_dropdown: config_dropdown,
     standings_performance_column_label: standings_performance_column_label,
     standings_rate_change_column_label: standings_rate_change_column_label,
@@ -95,6 +96,7 @@ const defaultConfig = {
     no_image: true,
     usefirstStyle: true,
     useSecondStyle: false,
+    shouRatingBeforeContest: true,
     useFinalResultOnVirtual: false,
     compareComputations: false
 };
@@ -198,6 +200,7 @@ class ConfigController {
         configView.addCheckbox(getTranslation("config_no_image"), getConfig("no_image"), null, val => setConfig("no_image", val));
         configView.addCheckbox(getTranslation("config_usefirstStyle"), getConfig("usefirstStyle"), getTranslation("config_usefirstStyle_description"), val => SetConfig("usefirstStyle", "useSecondStyle", val));
         configView.addCheckbox(getTranslation("config_useSecondStyle"), getConfig("useSecondStyle"), getTranslation("config_useSecondStyle_description"), val => SetConfig("useSecondStyle", "usefirstStyle", val));
+        configView.addCheckbox(getTranslation("config_shouRatingBeforeContest"), getConfig("shouRatingBeforeContest"), null, val => setConfig("shouRatingBeforeContest", val));
         if (isDebugMode()) {
             configView.addCheckbox("[DEBUG] enable debug mode", getConfig("isDebug"), null, val => setConfig("isDebug", val));
             configView.addCheckbox("[DEBUG] use results", getConfig("useResults"), null, val => setConfig("useResults", val));
@@ -852,8 +855,15 @@ function getBig(span,v){
 
     return elem;
 }
-function MergeSpan(span1,span2){
+function MergeSpan(span1,span2,adddiv){
     const ret = document.createElement("span");
+    if (adddiv){
+        const ret2 = document.createElement("div");
+        ret2.style = "transform: translateY(35%);";
+        ret2.append(span1);
+        ret.append(ret2);
+    }else
+        ret.append(span1);
     ret.append(span1,span2);
     return ret;
 }
@@ -881,7 +891,7 @@ function getRatedRatingElem(result) {
     elem.append(getRatingSpan(result.oldRating));
     elem.append(MergeSpan(getSpan(getDifferenceString(result.newRating,result.oldRating),[(result.oldRating == result.newRating?"grey":(result.oldRating < result.newRating?"green":"red")),"small"]),
         getDiv(getStrongSpan(getBig(getSpan(result.oldRating == result.newRating?"→":(result.oldRating < result.newRating?"↗":"↘"),
-                [(result.oldRating == result.newRating?"grey":(result.oldRating < result.newRating?"green":"red")),"big"]),(result.oldRating == result.newRating?0:0)),result.oldRating == result.newRating))));
+                [(result.oldRating == result.newRating?"grey":(result.oldRating < result.newRating?"green":"red")),"big"]),(result.oldRating == result.newRating?0:0)),result.oldRating == result.newRating)),result.oldRating == result.newRating));
     elem.innerHTML += getImage(result.newRating);
     elem.append(getRatingSpan(result.newRating));
     return elem;
@@ -892,11 +902,18 @@ function getUnratedRatingElem(result) {
     elem.append(getRatingSpan(result.oldRating), " ", getFadedSpan(["(unrated)"]));
     return elem;
 }
+function getRatingElemBeforeContest(result) {
+    const elem = document.createElement("div");
+    elem.innerHTML += getImage(result.oldRating);
+    elem.append(getRatingSpan(result.oldRating), getFadedSpan([(result.newRating?"(rated)":"(unrated)")]),
+        document.createElement("br"), getSpan([" (比赛未开始)"],["grey", "small"]));
+    return elem;
+}
 function getDefferedRatingElem(result) {
     const elem = document.createElement("div");
     elem.append(getRatingSpan(result.oldRating), " → ", getSpan(["???"], ["bold"]), document.createElement("br"), getFadedSpan([`(${getTranslation("standings_click_to_compute_label")})`]));
     async function listener() {
-        elem.removeEventListener("click", listener);
+//        elem.removeEventListener("click", listener);
         elem.replaceChildren(getFadedSpan(["loading..."]));
         let newRating;
         try {
@@ -910,7 +927,8 @@ function getDefferedRatingElem(result) {
         const newElem = getRatedRatingElem({ type: "rated", performance: result.performance, oldRating: result.oldRating, newRating: newRating });
         elem.replaceChildren(newElem);
     }
-    elem.addEventListener("click", listener);
+//    elem.addEventListener("click", listener);
+    listener();
     return elem;
 }
 function getPerfOnlyRatingElem(result) {
@@ -931,6 +949,8 @@ function getRatingElem(result) {
         return getUnratedRatingElem(result);
     if (result.type == "deffered")
         return getDefferedRatingElem(result);
+    if (result.type == "beforeContest")
+        return getRatingElemBeforeContest(result);
     if (result.type == "perfonly")
         return getPerfOnlyRatingElem();
     if (result.type == "error")
@@ -938,7 +958,7 @@ function getRatingElem(result) {
     throw new Error("unreachable");
 }
 function getPerfElem(result) {
-    if (result.type == "error")
+    if (result.type == "error"||result.type == "beforeContest")
         return getSpan(["-"], []);
     return getRatingSpan(result.performance);
 }
@@ -1350,6 +1370,13 @@ class ResultsWrapper {
         }
         return res;
     }
+    toRatingMaps() {
+        const res = new Map();
+        for (const result of this.data) {
+            res.set(result.UserScreenName, result.Rating);
+        }
+        return res;
+    }
     toNewRatingMaps() {
         const res = new Map();
         for (const result of this.data) {
@@ -1364,9 +1391,33 @@ async function getResults(contestScreenName) {
     if (!cache$2.has(contestScreenName)) {
         const result = await fetch(`https://atcoder.jp/contests/${contestScreenName}/results/json`);
         if (!result.ok) {
+            console.log(`Failed to fetch results: ${result.status}`);
             throw new Error(`Failed to fetch results: ${result.status}`);
         }
+
+        const results = await result.json();
+
+//        alert(Object.prototype.toString.call(results).slice(8, -1));
         cache$2.set(contestScreenName, await result.json());
+    }
+    return new ResultsWrapper(cache$2.get(contestScreenName));
+}
+async function getResultsBeforeContest(contestScreenName) {
+    if (!cache$2.has(contestScreenName)) {
+        const result = await fetch(`https://atcoder.jp/contests/${contestScreenName}/standings/json`);
+        if (!result.ok) {
+            console.log(`Failed to fetch results: ${result.status}`);
+            throw new Error(`Failed to fetch results: ${result.status}`);
+        }
+
+        const results = await result.text();
+        let strs = "\"StandingsData\":"
+        let Results = results.substring(results.indexOf(strs) + strs.length);
+        Results = Results.substring(0,Results.length - 18);
+
+        const data = JSON.parse(Results);
+//        alert(Object.prototype.toString.call(data).slice(8, -1));
+        cache$2.set(contestScreenName, data);
     }
     return new ResultsWrapper(cache$2.get(contestScreenName));
 }
@@ -1557,8 +1608,35 @@ class StandingsPageController {
         }
         this.contestDetails = contestDetails;
         this.contestDetailsMap = new Map(contestDetailsList.map(details => [details.contestScreenName, details]));
-        if (this.contestDetails.beforeContest(new Date()))
+        if (this.contestDetails.beforeContest(new Date())&&getConfig("shouRatingBeforeContest")){
+            this.standingsTableView = StandingsTableView.Get(async (userScreenName) => {
+                if (!this.oldRatings)
+                    return { "type": "error", "message": "旧rating缺失" };
+                if (!this.isRatedMaps)
+                    return { "type": "error", "message": "是否rated缺失" };
+                if (!this.oldRatings.has(userScreenName)){
+                    return { "type": "error", "message": `未找到${userScreenName}的oldRating信息` };
+                }
+
+                const oldRating = this.oldRatings.get(userScreenName);
+
+                if (this.isRatedMaps.get(userScreenName)){
+                    const newRating = 1;
+                    return {"type": "beforeContest", oldRating, performance: 1, newRating};
+                }
+                const newRating = 0;
+                return {"type": "beforeContest", oldRating, performance: 1, newRating};
+            });
+            this.standingsTableView.onRefreshed(async () => {
+                await this.updateData();
+                this.standingsTableView.update();
+            });
+            await this.updateData();
+            this.standingsTableView.update();
             return;
+        }
+        if (this.contestDetails.beforeContest(new Date()))
+            return ;
         if (getConfig("hideDuringContest") && this.contestDetails.duringContest(new Date()))
             return;
         const standings = await getStandings(this.contestDetails.contestScreenName);
@@ -1570,7 +1648,7 @@ class StandingsPageController {
             if (!this.performanceProvider)
                 return { "type": "error", "message": "无法计算perf" };
             if (!this.isRatedMaps)
-                return { "type": "error", "message": "isRatedMapping missing" };
+                return { "type": "error", "message": "是否rated缺失" };
             if (!this.oldRatings)
                 return { "type": "error", "message": "旧rating缺失" };
             if (!this.oldRatings.has(userScreenName))
@@ -1605,16 +1683,31 @@ class StandingsPageController {
     }
     async updateData() {
         if (!this.contestDetails)
-            throw new Error("contestDetails missing");
+            throw new Error("比赛数据缺失");
         if (isDebugMode())
             console.log("data updating...");
         const standings = await getStandings(this.contestDetails.contestScreenName);
         let basePerformanceProvider = undefined;
+        if (this.contestDetails.beforeContest(new Date())&&getConfig("shouRatingBeforeContest")){
+            try {
+                const results = await getResultsBeforeContest(this.contestDetails.contestScreenName);
+                if (results.data.length === 0) {
+                    throw new Error("排行榜数据缺失");
+                }
+                this.isRatedMaps = results.toIsRatedMaps();
+                this.oldRatings = results.toRatingMaps();
+            }
+            catch (e) {
+                alert("getResults failed", e);
+                console.warn("getResults failed", e);
+            }
+            return ;
+        }
         if (standings.data.Fixed && getConfig("useResults")) {
             try {
                 const results = await getResults(this.contestDetails.contestScreenName);
                 if (results.data.length === 0) {
-                    throw new Error("results missing");
+                    throw new Error("排行榜数据缺失");
                 }
                 basePerformanceProvider = new FixedPerformanceProvider(results.toPerformanceMaps());
                 this.isRatedMaps = results.toIsRatedMaps();
@@ -1791,9 +1884,9 @@ class VirtualStandingsPageController {
         this.contestDetails = contestDetails;
         this.standingsTableView = StandingsTableView.Get(async (userScreenName) => {
             if (!this.performanceProvider)
-                return { "type": "error", "message": "performanceProvider missing" };
+                return { "type": "error", "message": "无法计算perf" };
             if (!this.performanceProvider.availableFor(userScreenName))
-                return { "type": "error", "message": `performance not available for ${userScreenName}` };
+                return { "type": "error", "message": `无法计算${userScreenName}的perf信息` };
             const originalPerformance = this.performanceProvider.getPerformance(userScreenName);
             const positivizedPerformance = Math.round(positivizeRating(originalPerformance));
             return { type: "perfonly", performance: positivizedPerformance };
@@ -1837,6 +1930,13 @@ function isExtendedStandingsPage() {
 function isStandingsPage() {
     return /^\/contests\/[^/]*\/standings\/?$/.test(document.location.pathname);
 }
+/*
+const elements = document.querySelectorAll('.clearfix');
+elements.forEach((element) => {
+    element.innerHTML += `
+        <div id="ap-zh-error" class="alert alert-warning text-center" style="display: none;">null</div>
+    `;
+});*/
 
 const controller = new ConfigController();
 {
@@ -1856,3 +1956,8 @@ if (isExtendedStandingsPage()) {
     const controller = new ExtendedStandingsPageController();
     controller.register();
 }
+/*
+window.addEventListener('unhandledrejection', event => {
+    document.getElementById("ap-zh-error").innerHTML = `<p>ac-predictor-zh: ${event.reason}</p>`;
+    document.getElementById("ap-zh-error").style.display = "";
+});*/
