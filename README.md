@@ -28,7 +28,9 @@ ac-predictor最新汉化版，用以在AtCoder比赛进行中进行rating变化�
   如果已经安装了ac-predictor、ac-predictor-cn等脚本请先删除或禁用，否则会发生脚本冲突导致页面无法正常加载。
 </blockquote>
 
-安装完篡改猴后，直接从本页面获取该脚本即可。
+安装完篡改猴后，从[这里](https://greasyfork.org/zh-CN/scripts/567082-ac-predictor-zh)获取该脚本即可。
+
+如果 GreasyFork 访问困难，可以从[这里](https://greasyfork.icu/zh-CN/scripts/567082-ac-predictor-zh)获取。
 
 ### 3. 测试是否安装成功
 
