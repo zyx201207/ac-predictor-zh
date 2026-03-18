@@ -2,11 +2,11 @@
 // @name           ac-predictor-zh
 // @name:ja        ac-predictor-zh
 // @namespace      https://github.com/zyx201207/ac-predictor-zh
-// @version        2.0.12.1
+// @version        2.0.12.2
 // @license        MIT
-// @description 在AtCoder比赛中预测perf
-// @description:en    Predict AtCoder's performance during the contest
-// @description:ja コンテスト中にAtCoderのパフォーマンスを予測します
+// @description    在AtCoder比赛中预测rating变化 (由zyx2012翻译为简体中文并添加扩展功能）
+// @description:en predicting rating changes during the AtCoder Contests (Translated to Chinese by zyx2012 and add extension functions）
+// @description:ja AtCoderコンテストでratingのへんか変化をよそく予測します(zyx2012よりかんからだ簡体じ字ちゅうごく中国ご語にほんやく翻訳、かくちょう拡張きのう機能をついか追加)
 // @author         zyx2012
 // @match          https://atcoder.jp/*
 // @exclude        /^https://atcoder\.jp/[^#?]*/json/
@@ -864,7 +864,7 @@ function MergeSpan(span1,span2,adddiv){
         ret.append(ret2);
     }else
         ret.append(span1);
-    ret.append(span1,span2);
+    ret.append(span2);
     return ret;
 }
 function getDiv(span){
