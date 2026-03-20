@@ -2,7 +2,7 @@
 // @name           ac-predictor-zh
 // @name:ja        ac-predictor-zh
 // @namespace      https://github.com/zyx201207/ac-predictor-zh
-// @version        2.0.12.2
+// @version        2.0.12.3
 // @license        MIT
 // @description    在AtCoder比赛中预测rating变化 (由zyx2012翻译为简体中文并添加扩展功能）
 // @description:en predicting rating changes during the AtCoder Contests (Translated to Chinese by zyx2012 and add extension functions）
@@ -12,8 +12,6 @@
 // @exclude        /^https://atcoder\.jp/[^#?]*/json/
 // @grant          none
 // @icon        https://atcoder.jp/favicon.ico
-// @downloadURL    https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.user.js
-// @updateURL      https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.meta.js
 // ==/UserScript==
 
 // namespace      http://ac-predictor.azurewebsites.net/
@@ -1391,13 +1389,8 @@ async function getResults(contestScreenName) {
     if (!cache$2.has(contestScreenName)) {
         const result = await fetch(`https://atcoder.jp/contests/${contestScreenName}/results/json`);
         if (!result.ok) {
-            console.log(`Failed to fetch results: ${result.status}`);
             throw new Error(`Failed to fetch results: ${result.status}`);
         }
-
-        const results = await result.json();
-
-//        alert(Object.prototype.toString.call(results).slice(8, -1));
         cache$2.set(contestScreenName, await result.json());
     }
     return new ResultsWrapper(cache$2.get(contestScreenName));
