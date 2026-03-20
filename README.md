@@ -1,4 +1,4 @@
-# ac-predictor-zh <sub>v2.0.12.2<sub>——青，取之于蓝，而青于蓝</sub></sub>
+# ac-predictor-zh <sub>v2.0.12.3<sub>——青，取之于蓝，而青于蓝</sub></sub>
 
 ## 简介
 
