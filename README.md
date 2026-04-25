@@ -1,4 +1,4 @@
-# <big><big><big><big><span class="text-danger">计划更新：ac-predictor-zh 2.0.12.4 将会添加 ac-predictor-cn-ez 风格的错误处理，感谢 [@Gary0](https://github.com/gary-0925)</span></big></big></big></big>
+# 计划更新：ac-predictor-zh 2.0.12.4 将会优化错误处理，错误处理的灵感源自 ac-predictor-cn-ez，感谢 [@Gary0](https://github.com/gary-0925)。
 
 # ac-predictor-zh <sub>v2.0.12.3<sub>——青，取之于蓝，而青于蓝</sub></sub>
 
