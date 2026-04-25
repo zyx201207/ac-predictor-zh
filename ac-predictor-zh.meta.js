@@ -2,7 +2,7 @@
 // @name           ac-predictor-zh
 // @name:ja        ac-predictor-zh
 // @namespace      https://github.com/zyx201207/ac-predictor-zh
-// @version        2.0.12.3
+// @version        2.0.12.4
 // @license        MIT
 // @description    在AtCoder比赛中预测rating变化 (由zyx2012翻译为简体中文并添加扩展功能）
 // @description:en predicting rating changes during the AtCoder Contests (Translated to Chinese by zyx2012 and add extension functions）
@@ -11,13 +11,15 @@
 // @match          https://atcoder.jp/*
 // @exclude        /^https://atcoder\.jp/[^#?]*/json/
 // @grant          none
+// @downloadURL    https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.user.js
+// @updateURL      https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.meta.js
 // @icon        https://atcoder.jp/favicon.ico
 // ==/UserScript==
 
 // namespace      http://ac-predictor.azurewebsites.net/
 // downloadURL https://update.greasyfork.icu/scripts/369954/ac-predictor.user.js
 // updateURL https://update.greasyfork.icu/scripts/369954/ac-predictor.meta.js
-//Based on ac-predictor 2.0.12,Modifyed by zyx2012 for ac-predictor-zh 1.0.5.
+//Based on ac-predictor 2.0.12,Modifyed by zyx2012 for ac-predictor-zh 2.0.12.4.
 
 var config_header_text = "ac-predictor-zh 设置";
 var config_hideDuringContest_label = "在比赛期间隐藏预测";
@@ -56,6 +58,50 @@ var enJson = {
     standings_not_provided_label: standings_not_provided_label
 };
 var jaJson = enJson;
+
+class ErrorManager{
+    ErrorSet;
+    WarningSet;
+    constructor(){
+        this.ErrorSet = new Set();
+        this.WarningSet = new Set();
+    }
+    addErrorMessage(s){
+//        alert(s);
+        this.ErrorSet.add(s);
+    }
+    addWarningSet(s){
+        this.WarningSet.add(s);
+    }
+    makeMessage(type,value){
+        //. Error Selector
+        const elem = document.createElement("div");
+        elem.className = `alert alert-${type} text-center`;
+        elem.style = "display: flex; align-items: center;";
+        elem.innerHTML = `<div style="margin-left: auto; margin-right: auto;">ac-predictor-zh:Error: ${value}</div>`;
+        const close = document.createElement("div");
+        close.style = "float: right; margin-right: 5px;";
+        close.innerHTML = `×`;
+        function closer(){elem.remove();}
+        close.addEventListener("click",closer);
+        elem.append(close);
+        return elem;
+    }
+    print(){
+        this.ErrorSet.forEach((elem) => {
+//            alert(document.querySelectorAll("#vue-standings > div.clearfix").length);
+            document.querySelector("#vue-standings > div.clearfix").append(this.makeMessage("danger", elem));
+        });
+        this.WarningSet.forEach((elem) => {
+//            alert(document.querySelectorAll("#vue-standings > div.clearfix").length);
+            document.querySelector("#vue-standings > div.clearfix").append(this.makeMessage("warning", elem));
+        });
+        this.ErrorSet = new Set();
+        this.WarningSet = new Set();
+    }
+}
+
+let EManager = new ErrorManager ();
 
 // should not be here
 function getCurrentLanguage() {
@@ -117,6 +163,7 @@ function getConfig(configKey) {
     return getConfigObj()[configKey];
 }
 function setConfig(key, value) {
+//    alert(`${key},${value}`);
     const config = getConfigObj();
 //    alert(key + ' ' + config[key]);
     config[key] = value;
@@ -166,6 +213,47 @@ class ConfigView {
             handler(input.checked);
         });
     }
+    addBindedCheckbox(l1,v1,d1,h1,l2,v2,d2,h2){
+        const settingsRow = this.getSettingsRow();
+        const div1 = document.createElement("div");
+        div1.classList.add("checkbox");
+        div1.innerHTML =
+        `<label><input type="checkbox">${l1}<div class="small gray">${d1}</div></label>`;
+        settingsRow.append(div1);
+        const input1 = div1.querySelector("input");
+        input1.checked = v1;
+        const div2 = document.createElement("div");
+        div2.classList.add("checkbox");
+        div2.innerHTML =
+        `<label><input type="checkbox">${l2}<div class="small gray">${d2}</div></label>`;
+        settingsRow.append(div2);
+        const input2 = div2.querySelector("input");
+        input2.checked = v2;
+        let policy1 = 0,policy2 = 0;
+
+        function modify(x){
+            input1.removeEventListener("change", policy1);
+            input2.removeEventListener("change", policy2);
+//            alert(`state:${x}`);
+            h1(x);
+            h2(!x);
+//            setConfig("usefirstStyle", x);
+//            setConfig("useSecondStyle", !x);
+            input1.checked = x;
+            input2.checked = !x;
+            input1.addEventListener("change", policy1);
+            input2.addEventListener("change", policy2);
+        }
+
+        policy1 = (() => {
+            modify(input1.checked);
+        });
+        policy2 = (() => {
+            modify(!input2.checked);
+        });
+        input1.addEventListener("change", policy1);
+        input2.addEventListener("change", policy2);
+    }
     addHeader(level, content) {
         const settingsRow = this.getSettingsRow();
         const div = document.createElement(`h${level}`);
@@ -196,8 +284,19 @@ class ConfigController {
         configView.addCheckbox(getTranslation("config_hideUntilFixed_label"), getConfig("hideUntilFixed"), null, val => setConfig("hideUntilFixed", val));
         configView.addCheckbox(getTranslation("config_close_estimator"), getConfig("close_estimator"), null, val => setConfig("close_estimator", val));
         configView.addCheckbox(getTranslation("config_no_image"), getConfig("no_image"), null, val => setConfig("no_image", val));
-        configView.addCheckbox(getTranslation("config_usefirstStyle"), getConfig("usefirstStyle"), getTranslation("config_usefirstStyle_description"), val => SetConfig("usefirstStyle", "useSecondStyle", val));
-        configView.addCheckbox(getTranslation("config_useSecondStyle"), getConfig("useSecondStyle"), getTranslation("config_useSecondStyle_description"), val => SetConfig("useSecondStyle", "usefirstStyle", val));
+        function f1(val){
+            setConfig("usefirstStyle", val);
+        }
+        function f2(val){
+            setConfig("useSecondStyle", val);
+        }
+        configView.addBindedCheckbox(
+getTranslation("config_usefirstStyle"),getConfig("usefirstStyle"),
+getTranslation("config_usefirstStyle_description"),
+            f1,
+getTranslation("config_useSecondStyle"), getConfig("useSecondStyle"), 
+getTranslation("config_useSecondStyle_description"),
+            f2);
         configView.addCheckbox(getTranslation("config_shouRatingBeforeContest"), getConfig("shouRatingBeforeContest"), null, val => setConfig("shouRatingBeforeContest", val));
         if (isDebugMode()) {
             configView.addCheckbox("[DEBUG] enable debug mode", getConfig("isDebug"), null, val => setConfig("isDebug", val));
@@ -210,7 +309,9 @@ class ConfigController {
 async function getAPerfs(contestScreenName) {
     const result = await fetch(`https://data.ac-predictor.com/aperfs/${contestScreenName}.json`);
     if (!result.ok) {
-        throw new Error(`Failed to fetch aperfs: ${result.status}`);
+        EManager.addErrorMessage("aperfs 获取失败");
+        EManager.print();
+        throw new Error(`aperfs 获取失败: ${result.status}`);
     }
     return await result.json();
 }
@@ -311,7 +412,9 @@ class ContestDetails {
 async function getContestDetails() {
     const result = await fetch(`https://data.ac-predictor.com/contest-details.json`);
     if (!result.ok) {
-        throw new Error(`Failed to fetch contest details: ${result.status}`);
+        EManager.addErrorMessage(`比赛详情获取失败：${result.status}`);
+        EManager.print();
+        throw new Error(`比赛详情获取失败：${result.status}`);
     }
     const parsed = await result.json();
     const res = [];
@@ -425,7 +528,9 @@ async function getExtendedStandings(contestScreenName) {
     if (!cache$4.has(contestScreenName)) {
         const result = await fetch(`https://atcoder.jp/contests/${contestScreenName}/standings/extended/json`);
         if (!result.ok) {
-            throw new Error(`Failed to fetch extended standings: ${result.status}`);
+            EManager.addErrorMessage(`最终排行榜获取失败: ${result.status}`);
+            EManager.print();
+            throw new Error(`最终排行榜获取失败: ${result.status}`);
         }
         cache$4.set(contestScreenName, await result.json());
     }
@@ -907,6 +1012,7 @@ function getRatingElemBeforeContest(result) {
         document.createElement("br"), getSpan([" (比赛未开始)"],["grey", "small"]));
     return elem;
 }
+let cntfail = 0;
 function getDefferedRatingElem(result) {
     const elem = document.createElement("div");
     elem.append(getRatingSpan(result.oldRating), " → ", getSpan(["???"], ["bold"]), document.createElement("br"), getFadedSpan([`(${getTranslation("standings_click_to_compute_label")})`]));
@@ -953,6 +1059,8 @@ function getRatingElem(result) {
         return getPerfOnlyRatingElem();
     if (result.type == "error")
         return getErrorRatingElem(result);
+    EManager.addErrorMessage("内部错误");
+    EManager.print();
     throw new Error("unreachable");
 }
 function getPerfElem(result) {
@@ -1066,7 +1174,9 @@ class ExtendedStandingsPageController {
         const contestDetailsList = await getContestDetails();
         const contestDetails = contestDetailsList.find(details => details.contestScreenName == contestScreenName);
         if (contestDetails === undefined) {
-            throw new Error("contest details not found");
+            EManager.addErrorMessage("未找到比赛详情");
+            EManager.print();
+            throw new Error("未找到比赛详情");
         }
         this.contestDetails = contestDetails;
         this.standingsTableView = StandingsTableView.Get(async (userScreenName) => {
@@ -1086,8 +1196,11 @@ class ExtendedStandingsPageController {
         this.standingsTableView.update();
     }
     async updateData() {
-        if (!this.contestDetails)
-            throw new Error("contestDetails missing");
+        if (!this.contestDetails){
+            EManager.addErrorMessage("未找到比赛详情");
+            EManager.print();
+            throw new Error("未找到比赛详情");
+        }
         const extendedStandings = await getExtendedStandings(this.contestDetails.contestScreenName);
         const aperfsObj = await getAPerfs(this.contestDetails.contestScreenName);
         const defaultAPerf = this.contestDetails.defaultAPerf;
@@ -1128,7 +1241,9 @@ async function getHistory(userScreenName, contestType = "algorithm") {
     if (!cache$3.has(key)) {
         const result = await fetch(`https://atcoder.jp/users/${userScreenName}/history/json?contestType=${contestType}`);
         if (!result.ok) {
-            throw new Error(`Failed to fetch history: ${result.status}`);
+            EManager.addErrorMessage(`历史信息获取失败: ${result.status}`);
+            EManager.print();
+            throw new Error(`历史信息获取失败: ${result.status}`);
         }
         cache$3.set(key, await result.json());
     }
@@ -1389,7 +1504,9 @@ async function getResults(contestScreenName) {
     if (!cache$2.has(contestScreenName)) {
         const result = await fetch(`https://atcoder.jp/contests/${contestScreenName}/results/json`);
         if (!result.ok) {
-            throw new Error(`Failed to fetch results: ${result.status}`);
+            EManager.addErrorMessage(`比赛结果获取失败: ${result.status}`);
+            EManager.print();
+            throw new Error(`比赛结果获取失败: ${result.status}`);
         }
         cache$2.set(contestScreenName, await result.json());
     }
@@ -1399,8 +1516,9 @@ async function getResultsBeforeContest(contestScreenName) {
     if (!cache$2.has(contestScreenName)) {
         const result = await fetch(`https://atcoder.jp/contests/${contestScreenName}/standings/json`);
         if (!result.ok) {
-            console.log(`Failed to fetch results: ${result.status}`);
-            throw new Error(`Failed to fetch results: ${result.status}`);
+            EManager.addErrorMessage(`比赛结果获取失败: ${result.status}`);
+            EManager.print();
+            throw new Error(`比赛结果获取失败: ${result.status}`);
         }
 
         const results = await result.text();
@@ -1481,7 +1599,9 @@ let StandingsWrapper$1 = class StandingsWrapper {
         if (contestType === "heuristic") {
             return data.IsRated && data.TotalResult.Count !== 0;
         }
-        throw new Error("unreachable");
+        EManager.addErrorMessage("内部错误");
+        EManager.print();
+        throw new Error("内部错误");
     }
 };
 const STANDINGS_CACHE_DURATION$1 = 10 * 1000;
@@ -1490,7 +1610,9 @@ async function getStandings(contestScreenName) {
     if (!cache$1.has(contestScreenName)) {
         const result = await fetch(`https://atcoder.jp/contests/${contestScreenName}/standings/json`);
         if (!result.ok) {
-            throw new Error(`Failed to fetch standings: ${result.status}`);
+            EManager.addErrorMessage(`排行榜信息获取失败: ${result.status}`);
+            EManager.print();
+            throw new Error(`排行榜信息获取失败: ${result.status}`);
         }
         cache$1.set(contestScreenName, await result.json());
     }
@@ -1514,7 +1636,7 @@ class FixedPerformanceProvider {
     }
     getPerformance(userScreenName) {
         if (!this.availableFor(userScreenName)) {
-            throw new Error(`User ${userScreenName} not found`);
+            throw new Error(`未找到用户 ${userScreenName}`);
         }
         return this.result.get(userScreenName);
     }
@@ -1535,7 +1657,7 @@ class IncrementalAlgRatingProvider {
     }
     async getRating(userScreenName, newPerformance) {
         if (!this.availableFor(userScreenName)) {
-            throw new Error(`rating not available for ${userScreenName}`);
+            throw new Error(`${userScreenName}的rating不可用`);
         }
         const rating = this.unpositivizedRatingMap.get(userScreenName);
         const competitions = this.competitionsMap.get(userScreenName);
@@ -1553,7 +1675,7 @@ class ConstRatingProvider {
     }
     async getRating(userScreenName, newPerformance) {
         if (!this.availableFor(userScreenName)) {
-            throw new Error(`rating not available for ${userScreenName}`);
+            throw new Error(`${userScreenName}的rating不可用`);
         }
         return this.ratings.get(userScreenName);
     }
@@ -1597,6 +1719,8 @@ class StandingsPageController {
         const contestDetailsList = await getContestDetails();
         const contestDetails = contestDetailsList.find(details => details.contestScreenName == contestScreenName);
         if (contestDetails === undefined) {
+            EManager.addErrorMessage("未找到比赛详情");
+            EManager.print();
             throw new Error("比赛详情未找到");
         }
         this.contestDetails = contestDetails;
@@ -1675,8 +1799,11 @@ class StandingsPageController {
         this.standingsTableView.update();
     }
     async updateData() {
-        if (!this.contestDetails)
+        if (!this.contestDetails){
+            EManager.addErrorMessage(`比赛数据缺失`);
+            EManager.print();
             throw new Error("比赛数据缺失");
+        }
         if (isDebugMode())
             console.log("data updating...");
         const standings = await getStandings(this.contestDetails.contestScreenName);
@@ -1691,7 +1818,6 @@ class StandingsPageController {
                 this.oldRatings = results.toRatingMaps();
             }
             catch (e) {
-                alert("getResults failed", e);
                 console.warn("getResults failed", e);
             }
             return ;
@@ -1806,7 +1932,9 @@ async function getVirtualStandings(contestScreenName, showGhost) {
     if (!cache.has(cacheKey)) {
         const result = await fetch(`https://atcoder.jp/contests/${contestScreenName}/standings/virtual/json${showGhost ? "?showGhost=true" : ""}`);
         if (!result.ok) {
-            throw new Error(`Failed to fetch standings: ${result.status}`);
+            EManager.addErrorMessage(`排行榜信息获取失败: ${result.status}`);
+            EManager.print();
+            throw new Error(`排行榜信息获取失败: ${result.status}`);
         }
         cache.set(cacheKey, await result.json());
     }
@@ -1827,7 +1955,7 @@ function isVirtualStandingsPage() {
 
 function duringVirtualParticipation() {
     if (!isVirtualStandingsPage()) {
-        throw new Error("not available in this page");
+        throw new Error("在本页面不可用");
     }
     const timerText = document.getElementById("virtual-timer")?.textContent ?? "";
     if (timerText && !timerText.includes("終了") && !timerText.includes("over"))
@@ -1872,7 +2000,9 @@ class VirtualStandingsPageController {
         const contestDetailsList = await getContestDetails();
         const contestDetails = contestDetailsList.find(details => details.contestScreenName == contestScreenName);
         if (contestDetails === undefined) {
-            throw new Error("contest details not found");
+            EManager.addErrorMessage("未找到比赛详情");
+            EManager.print();
+            throw new Error("未找到比赛详情");
         }
         this.contestDetails = contestDetails;
         this.standingsTableView = StandingsTableView.Get(async (userScreenName) => {
@@ -1892,8 +2022,10 @@ class VirtualStandingsPageController {
         this.standingsTableView.update();
     }
     async updateData() {
-        if (!this.contestDetails)
-            throw new Error("contestDetails missing");
+        if (!this.contestDetails){
+            EManager.addErrorMessage("未找到比赛详情");
+            EManager.print();
+        }
         const virtualStandings = await getVirtualStandings(this.contestDetails.contestScreenName, true);
         const results = await getResults(this.contestDetails.contestScreenName);
         let ranks;
@@ -1949,8 +2081,4 @@ if (isExtendedStandingsPage()) {
     const controller = new ExtendedStandingsPageController();
     controller.register();
 }
-/*
-window.addEventListener('unhandledrejection', event => {
-    document.getElementById("ap-zh-error").innerHTML = `<p>ac-predictor-zh: ${event.reason}</p>`;
-    document.getElementById("ap-zh-error").style.display = "";
-});*/
+EManager.print();
