@@ -12,8 +12,8 @@
 // @exclude        /^https://atcoder\.jp/[^#?]*/json/
 // @grant          none
 // @icon        https://atcoder.jp/favicon.ico
-// @downloadURL    https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.user.js
-// @updateURL    https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.meta.js
+// @downloadURL    https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/测试版/ac-predictor-zh.user.js
+// @updateURL    https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/测试版/ac-predictor-zh.meta.js
 // ==/UserScript==
 
 // namespace      http://ac-predictor.azurewebsites.net/
