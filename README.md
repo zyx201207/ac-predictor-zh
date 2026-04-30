@@ -8,11 +8,15 @@ ac-predictor最新汉化版，用以在AtCoder比赛进行中进行rating变化�
 
 ac-predictor-zh 2.0.12.4 优化了错误处理，灵感来自 ac-predictor-cn-ez，感谢[@Gary-0925](https://github.com/gary-0925)！
 
+2.0.12.5 和 2.0.12.6 进一步优化了错误处理机制，目前以[测试版](https://github.com/zyx201207/ac-predictor-zh/tree/%E6%B5%8B%E8%AF%95%E7%89%88)的形式发布。
+
 如果不错就[GitHub上](https://github.com/zyx201207/ac-predictor-zh)给个star并给个好评谢谢喵。
 
 感谢[@key-moon](https://github.com/key-moon)提供[原版脚本](https://github.com/key-moon/ac-predictor)。
 
-另外，[ac-predictor-cn-ez](https://github.com/Gary-0925/ac-predictor-cn-ez/)也是一个不错的选择。
+另外，[ac-predictor-cn-ez](https://github.com/Gary-0925/ac-predictor-cn-ez/)也是一个不错的选择，不过这个好像停止更新了。
+
+保证一旦有新功能研发完成，哪怕只是一个功能，我也会第一时间以测试版的形式发布。
 
 ## 安装流程
 
