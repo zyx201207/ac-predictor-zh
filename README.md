@@ -1,4 +1,4 @@
-# ac-predictor-zh <sub>v2.0.12.4<sub>——青，取之于蓝，而青于蓝</sub></sub>
+# ac-predictor-zh <sub>v2.0.12.5<sub>——青，取之于蓝，而青于蓝</sub></sub>
 
 ## 简介
 
@@ -6,9 +6,9 @@ ac-predictor最新汉化版，用以在AtCoder比赛进行中进行rating变化�
 
 添加`在比赛开始前显示rating`等实用的功能，并对 rating 变化箭头进行了美化，比赛排行榜可以使用两种不同的风格来显示rating变化，对大部分内容进行了汉化。
 
-ac-predictor-zh 2.0.12.4 优化了错误处理，灵感来自 ac-predictor-cn-ez，感谢[@Gary-0925](https://github.com/gary-0925)！
+ac-predictor-zh 2.0.12.4 优化了错误处理，2.0.12.5 基本完成，灵感来自 ac-predictor-cn-ez，感谢[@Gary-0925](https://github.com/gary-0925)！
 
-2.0.12.5 和 2.0.12.6 进一步优化了错误处理机制，目前以[测试版](https://github.com/zyx201207/ac-predictor-zh/tree/%E6%B5%8B%E8%AF%95%E7%89%88)的形式发布。
+2.0.12.6 进一步优化了错误处理机制，目前以[测试版](https://github.com/zyx201207/ac-predictor-zh/tree/%E6%B5%8B%E8%AF%95%E7%89%88)的形式发布。
 
 如果不错就[GitHub上](https://github.com/zyx201207/ac-predictor-zh)给个star并给个好评谢谢喵。
 
