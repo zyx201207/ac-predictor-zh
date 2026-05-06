@@ -2,7 +2,7 @@
 // @name           ac-predictor-zh
 // @name:ja        ac-predictor-zh
 // @namespace      https://github.com/zyx201207/ac-predictor-zh
-// @version        2.0.12.4
+// @version        2.0.12.5
 // @license        MIT
 // @description    在AtCoder比赛中预测rating变化 (由zyx2012翻译为简体中文并添加扩展功能）
 // @description:en predicting rating changes during the AtCoder Contests (Translated to Chinese by zyx2012 and add extension functions）
@@ -11,15 +11,15 @@
 // @match          https://atcoder.jp/*
 // @exclude        /^https://atcoder\.jp/[^#?]*/json/
 // @grant          none
-// @downloadURL    https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.user.js
-// @updateURL      https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.meta.js
 // @icon        https://atcoder.jp/favicon.ico
+// @downloadURL    https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.user.js
+// @updateURL    https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.user.js
 // ==/UserScript==
 
 // namespace      http://ac-predictor.azurewebsites.net/
 // downloadURL https://update.greasyfork.icu/scripts/369954/ac-predictor.user.js
 // updateURL https://update.greasyfork.icu/scripts/369954/ac-predictor.meta.js
-//Based on ac-predictor 2.0.12,Modifyed by zyx2012 for ac-predictor-zh 2.0.12.4.
+//Based on ac-predictor 2.0.12,Modifyed by zyx2012 for ac-predictor-zh 2.0.12.5.
 
 var config_header_text = "ac-predictor-zh 设置";
 var config_hideDuringContest_label = "在比赛期间隐藏预测";
@@ -62,16 +62,26 @@ var jaJson = enJson;
 class ErrorManager{
     ErrorSet;
     WarningSet;
+    BErrorSet;
+    BWarningSet;
     constructor(){
         this.ErrorSet = new Set();
         this.WarningSet = new Set();
+        this.BErrorSet = new Set();
+        this.BWarningSet = new Set();
     }
     addErrorMessage(s){
 //        alert(s);
-        this.ErrorSet.add(s);
+        if (!this.BErrorSet.has(s)){
+            this.ErrorSet.add(s);
+            this.BErrorSet.add(s);
+        }
     }
     addWarningSet(s){
-        this.WarningSet.add(s);
+        if (!this.BWarningSet.has(s)){
+            this.WarningSet.add(s);
+            this.BWarningSet.add(s);
+        }
     }
     makeMessage(type,value){
         //. Error Selector
@@ -1017,7 +1027,7 @@ function getDefferedRatingElem(result) {
     const elem = document.createElement("div");
     elem.append(getRatingSpan(result.oldRating), " → ", getSpan(["???"], ["bold"]), document.createElement("br"), getFadedSpan([`(${getTranslation("standings_click_to_compute_label")})`]));
     async function listener() {
-//        elem.removeEventListener("click", listener);
+        elem.removeEventListener("click", listener);
         elem.replaceChildren(getFadedSpan(["loading..."]));
         let newRating;
         try {
@@ -1031,8 +1041,7 @@ function getDefferedRatingElem(result) {
         const newElem = getRatedRatingElem({ type: "rated", performance: result.performance, oldRating: result.oldRating, newRating: newRating });
         elem.replaceChildren(newElem);
     }
-//    elem.addEventListener("click", listener);
-    listener();
+    elem.addEventListener("click", listener);
     return elem;
 }
 function getPerfOnlyRatingElem(result) {
@@ -1042,6 +1051,11 @@ function getPerfOnlyRatingElem(result) {
 }
 function getErrorRatingElem(result) {
     const elem = document.createElement("div");
+//    alert(result.user);
+    if (result.user == undefined){
+        EManager.addErrorMessage(result.message);
+        EManager.print();
+    }
     elem.append(getSpan(["加载失败"], ["red"]), document.createElement("br"), getSpan(["(悬停以查看详细信息)"], ["grey", "small"]), getSpan([result.message], ["my-tooltiptext"]));
     elem.classList.add("my-tooltip");
     return elem;
@@ -1732,7 +1746,7 @@ class StandingsPageController {
                 if (!this.isRatedMaps)
                     return { "type": "error", "message": "是否rated缺失" };
                 if (!this.oldRatings.has(userScreenName)){
-                    return { "type": "error", "message": `未找到${userScreenName}的oldRating信息` };
+                    return { "type": "error", "message": `未找到${userScreenName}的oldRating信息` , "user": `${userScreenName}`};
                 }
 
                 const oldRating = this.oldRatings.get(userScreenName);
@@ -1769,10 +1783,10 @@ class StandingsPageController {
             if (!this.oldRatings)
                 return { "type": "error", "message": "旧rating缺失" };
             if (!this.oldRatings.has(userScreenName))
-                return { "type": "error", "message": `未找到${userScreenName}的旧rating信息` };
+                return { "type": "error", "message": `未找到${userScreenName}的旧rating信息` , "user": `${userScreenName}`};
             const oldRating = this.oldRatings.get(userScreenName);
             if (!this.performanceProvider.availableFor(userScreenName))
-                return { "type": "error", "message": `无法获取${userScreenName}的perf数据` };
+                return { "type": "error", "message": `无法获取${userScreenName}的perf数据` , "user": `${userScreenName}`};
             const originalPerformance = this.performanceProvider.getPerformance(userScreenName);
             const positivizedPerformance = Math.round(positivizeRating(originalPerformance));
             if (this.isRatedMaps.get(userScreenName)) {
@@ -2009,7 +2023,7 @@ class VirtualStandingsPageController {
             if (!this.performanceProvider)
                 return { "type": "error", "message": "无法计算perf" };
             if (!this.performanceProvider.availableFor(userScreenName))
-                return { "type": "error", "message": `无法计算${userScreenName}的perf信息` };
+                return { "type": "error", "message": `无法计算${userScreenName}的perf信息` , "user": `${userScreenName}`};
             const originalPerformance = this.performanceProvider.getPerformance(userScreenName);
             const positivizedPerformance = Math.round(positivizeRating(originalPerformance));
             return { type: "perfonly", performance: positivizedPerformance };
