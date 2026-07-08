@@ -1,0 +1,44 @@
+[
+	{
+		"version": "2.0.12.6",
+		"priority": 6,
+		"message": "完善错误处理功能",
+		"release": false,
+		"url": "https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/测试版/ac-predictor-zh.user.js"
+	},
+	{
+		"version": "2.0.12.5",
+		"priority": 5,
+		"message": "无更新日志",
+		"release": true,
+		"url": "https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.user.js"
+	},
+	{
+		"version": "2.0.12.4",
+		"priority": 4,
+		"message": "无更新日志",
+		"release": true,
+		"url": "https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/v2.0.12.4.js"
+	},
+	{
+		"version": "2.0.12.3",
+		"priority": 3,
+		"message": "无更新日志",
+		"release": true,
+		"url": "https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/v2.0.12.3.js"
+	},
+	{
+		"version": "2.0.12.2",
+		"priority": 2,
+		"message": "无更新日志",
+		"release": true,
+		"url": "https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/v2.0.12.2.js"
+	},
+	{
+		"version": "2.0.12.1",
+		"priority": 1,
+		"message": "无更新日志",
+		"release": true,
+		"url": "https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/v2.0.12.1.js"
+	}
+]
