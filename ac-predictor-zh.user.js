@@ -2,7 +2,7 @@
 // @name           ac-predictor-zh
 // @name:ja        ac-predictor-zh
 // @namespace      https://github.com/zyx201207/ac-predictor-zh
-// @version        2.0.12.5
+// @version        2.0.12.6
 // @license        MIT
 // @description    在AtCoder比赛中预测rating变化 (由zyx2012翻译为简体中文并添加扩展功能）
 // @description:en predicting rating changes during the AtCoder Contests (Translated to Chinese by zyx2012 and add extension functions）
@@ -12,8 +12,8 @@
 // @exclude        /^https://atcoder\.jp/[^#?]*/json/
 // @grant          none
 // @icon        https://atcoder.jp/favicon.ico
-// @downloadURL    https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.user.js
-// @updateURL    https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/main/ac-predictor-zh.user.js
+// @downloadURL    https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/测试版/ac-predictor-zh.user.js
+// @updateURL    https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/测试版/ac-predictor-zh.user.js
 // ==/UserScript==
 
 // namespace      http://ac-predictor.azurewebsites.net/
@@ -33,12 +33,14 @@ var config_usefirstStyle_description = "勾选此项，将使用默认风格显�
 var config_useSecondStyle = "使用风格2显示rating变化";
 var config_useSecondStyle_description = "勾选此项，将使用第二风格显示rating变化";
 var config_shouRatingBeforeContest = "在比赛开始前显示 rating";
+var config_disappear = "错误信息自动消失";
+var config_disappear_description = "勾选此项，错误信息将会自动逐渐消失";
 var config_dropdown = "ac-predictor-zh 设置";
 var standings_performance_column_label = "perf";
 var standings_rate_change_column_label = "rating delta";
 var standings_click_to_compute_label = "点击计算";
 var standings_not_provided_label = "不可用";
-var enJson = {
+var cnJson = {
     config_header_text: config_header_text,
     config_hideDuringContest_label: config_hideDuringContest_label,
     config_hideUntilFixed_label: config_hideUntilFixed_label,
@@ -51,24 +53,28 @@ var enJson = {
     config_useSecondStyle: config_useSecondStyle,
     config_useSecondStyle_description: config_useSecondStyle_description,
     config_shouRatingBeforeContest: config_shouRatingBeforeContest,
+    config_disappear: config_disappear,
+    config_disappear_description: config_disappear_description,
     config_dropdown: config_dropdown,
     standings_performance_column_label: standings_performance_column_label,
     standings_rate_change_column_label: standings_rate_change_column_label,
     standings_click_to_compute_label: standings_click_to_compute_label,
     standings_not_provided_label: standings_not_provided_label
 };
-var jaJson = enJson;
+var enJson = cnJson,jaJson = cnJson;
 
 class ErrorManager{
     ErrorSet;
     WarningSet;
     BErrorSet;
     BWarningSet;
+    Disappear;
     constructor(){
         this.ErrorSet = new Set();
         this.WarningSet = new Set();
         this.BErrorSet = new Set();
         this.BWarningSet = new Set();
+        this.Disappear = false;
     }
     addErrorMessage(s){
 //        alert(s);
@@ -76,6 +82,9 @@ class ErrorManager{
             this.ErrorSet.add(s);
             this.BErrorSet.add(s);
         }
+    }
+    setDisappear(b){
+        this.Disappear = b;
     }
     addWarningSet(s){
         if (!this.BWarningSet.has(s)){
@@ -87,7 +96,7 @@ class ErrorManager{
         //. Error Selector
         const elem = document.createElement("div");
         elem.className = `alert alert-${type} text-center`;
-        elem.style = "display: flex; align-items: center;";
+        elem.style = "display: flex; align-items: center; opacity: 1;";
         elem.innerHTML = `<div style="margin-left: auto; margin-right: auto;">ac-predictor-zh:Error: ${value}</div>`;
         const close = document.createElement("div");
         close.style = "float: right; margin-right: 5px;";
@@ -95,6 +104,17 @@ class ErrorManager{
         function closer(){elem.remove();}
         close.addEventListener("click",closer);
         elem.append(close);
+        if (this.Disappear){
+            function disappear(){
+                elem.style.opacity -= 0.05;
+                if (elem.style.opacity <= 0){
+                    elem.style.display = "none";
+                    return ;
+                }
+                setTimeout(disappear, 50);
+            }
+            setTimeout(disappear,1000);
+        }
         return elem;
     }
     print(){
@@ -150,6 +170,7 @@ const defaultConfig = {
     no_image: true,
     usefirstStyle: true,
     useSecondStyle: false,
+    Disappear: false,
     shouRatingBeforeContest: true,
     useFinalResultOnVirtual: false,
     compareComputations: false
@@ -188,6 +209,8 @@ const isDebug = location.hash.includes("ac-predictor-debug") || getConfig("isDeb
 function isDebugMode() {
     return isDebug;
 }
+
+EManager.setDisappear(getConfig("Disappear"));
 
 var modalHTML = "<div id=\"modal-ac-predictor-settings\" class=\"modal fade\" tabindex=\"-1\" role=\"dialog\">\n\t<div class=\"modal-dialog\" role=\"document\">\n\t<div class=\"modal-content\">\n\t\t<div class=\"modal-header\">\n\t\t\t<button type=\"button\" class=\"close\" data-dismiss=\"modal\" aria-label=\"Close\"><span aria-hidden=\"true\">×</span></button>\n\t\t\t<h4 class=\"modal-title\">{config_header_text}</h4>\n\t\t</div>\n\t\t<div class=\"modal-body\">\n\t\t\t<div class=\"container-fluid\">\n\t\t\t\t<div class=\"settings-row\" class=\"row\">\n\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</div>\n\t\t<div class=\"modal-footer\">\n\t\t\t<button type=\"button\" class=\"btn btn-default\" data-dismiss=\"modal\">close</button>\n\t\t</div>\n\t</div>\n</div>\n</div>";
 
@@ -308,6 +331,7 @@ getTranslation("config_useSecondStyle"), getConfig("useSecondStyle"),
 getTranslation("config_useSecondStyle_description"),
             f2);
         configView.addCheckbox(getTranslation("config_shouRatingBeforeContest"), getConfig("shouRatingBeforeContest"), null, val => setConfig("shouRatingBeforeContest", val));
+        configView.addCheckbox(getTranslation("config_disappear"), getConfig("Disappear"), getTranslation("config_disappear_description"), val => {setConfig("Disappear", val);EManager.setDisappear(val);});
         if (isDebugMode()) {
             configView.addCheckbox("[DEBUG] enable debug mode", getConfig("isDebug"), null, val => setConfig("isDebug", val));
             configView.addCheckbox("[DEBUG] use results", getConfig("useResults"), null, val => setConfig("useResults", val));
