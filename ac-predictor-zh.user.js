@@ -2,7 +2,7 @@
 // @name           ac-predictor-zh
 // @name:ja        ac-predictor-zh
 // @namespace      https://github.com/zyx201207/ac-predictor-zh
-// @version        2.0.12.6
+// @version        2.0.12.7
 // @license        MIT
 // @description    在AtCoder比赛中预测rating变化 (由zyx2012翻译为简体中文并添加扩展功能）
 // @description:en predicting rating changes during the AtCoder Contests (Translated to Chinese by zyx2012 and add extension functions）
@@ -10,7 +10,9 @@
 // @author         zyx2012
 // @match          https://atcoder.jp/*
 // @exclude        /^https://atcoder\.jp/[^#?]*/json/
-// @grant          none
+// @grant          GM_info
+// @grant          GM_getValue
+// @grant          GM_setValue
 // @icon        https://atcoder.jp/favicon.ico
 // @downloadURL    https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/测试版/ac-predictor-zh.user.js
 // @updateURL    https://raw.githubusercontent.com/zyx201207/ac-predictor-zh/测试版/ac-predictor-zh.user.js
@@ -19,7 +21,7 @@
 // namespace      http://ac-predictor.azurewebsites.net/
 // downloadURL https://update.greasyfork.icu/scripts/369954/ac-predictor.user.js
 // updateURL https://update.greasyfork.icu/scripts/369954/ac-predictor.meta.js
-//Based on ac-predictor 2.0.12,Modifyed by zyx2012 for ac-predictor-zh 2.0.12.5.
+//Based on ac-predictor 2.0.12,Modified by zyx2012 for ac-predictor-zh 2.0.12.7.
 
 var config_header_text = "ac-predictor-zh 设置";
 var config_hideDuringContest_label = "在比赛期间隐藏预测";
@@ -35,6 +37,8 @@ var config_useSecondStyle_description = "勾选此项，将使用第二风格显
 var config_shouRatingBeforeContest = "在比赛开始前显示 rating";
 var config_disappear = "错误信息自动消失";
 var config_disappear_description = "勾选此项，错误信息将会自动逐渐消失";
+var config_update = "自动更新";
+var config_update_discription = "勾选此项，脚本将会管理自身的更新，否则由篡改猴管理";
 var config_dropdown = "ac-predictor-zh 设置";
 var standings_performance_column_label = "perf";
 var standings_rate_change_column_label = "rating delta";
@@ -55,6 +59,8 @@ var cnJson = {
     config_shouRatingBeforeContest: config_shouRatingBeforeContest,
     config_disappear: config_disappear,
     config_disappear_description: config_disappear_description,
+    config_update: config_update,
+    config_update_discription: config_update_discription,
     config_dropdown: config_dropdown,
     standings_performance_column_label: standings_performance_column_label,
     standings_rate_change_column_label: standings_rate_change_column_label,
@@ -171,12 +177,13 @@ const defaultConfig = {
     usefirstStyle: true,
     useSecondStyle: false,
     Disappear: false,
+    update: true,
     shouRatingBeforeContest: true,
     useFinalResultOnVirtual: false,
     compareComputations: false
 };
 function getConfigObj() {
-    const val = localStorage.getItem(configKey) ?? "{}";
+    const val = GM_getValue(configKey) ?? "{}";
     let config;
     try {
         config = JSON.parse(val);
@@ -188,7 +195,7 @@ function getConfigObj() {
     return { ...defaultConfig, ...config };
 }
 function storeConfigObj(config) {
-    localStorage.setItem(configKey, JSON.stringify(config));
+    GM_setValue(configKey, JSON.stringify(config));
 }
 function getConfig(configKey) {
     return getConfigObj()[configKey];
@@ -327,11 +334,12 @@ class ConfigController {
 getTranslation("config_usefirstStyle"),getConfig("usefirstStyle"),
 getTranslation("config_usefirstStyle_description"),
             f1,
-getTranslation("config_useSecondStyle"), getConfig("useSecondStyle"), 
+getTranslation("config_useSecondStyle"), getConfig("useSecondStyle"),
 getTranslation("config_useSecondStyle_description"),
             f2);
         configView.addCheckbox(getTranslation("config_shouRatingBeforeContest"), getConfig("shouRatingBeforeContest"), null, val => setConfig("shouRatingBeforeContest", val));
         configView.addCheckbox(getTranslation("config_disappear"), getConfig("Disappear"), getTranslation("config_disappear_description"), val => {setConfig("Disappear", val);EManager.setDisappear(val);});
+        configView.addCheckbox(getTranslation("config_update"), getConfig("update"), getTranslation("config_update_discription"), val => setConfig("update", val));
         if (isDebugMode()) {
             configView.addCheckbox("[DEBUG] enable debug mode", getConfig("isDebug"), null, val => setConfig("isDebug", val));
             configView.addCheckbox("[DEBUG] use results", getConfig("useResults"), null, val => setConfig("useResults", val));
@@ -1345,12 +1353,12 @@ function GetEmbedTweetLink(content, url) {
     return `https://twitter.com/share?text=${encodeURI(content)}&url=${encodeURI(url)}`;
 }
 function getLS(key) {
-    const val = localStorage.getItem(key);
+    const val = GM_getValue(key);
     return (val ? JSON.parse(val) : val);
 }
 function setLS(key, val) {
     try {
-        localStorage.setItem(key, JSON.stringify(val));
+        GM_setValue(key, JSON.stringify(val));
     }
     catch (error) {
         console.log(error);
@@ -2120,3 +2128,72 @@ if (isExtendedStandingsPage()) {
     controller.register();
 }
 EManager.print();
+
+async function updateVersion(){
+    if (!getConfig("update")) return ;
+    async function get(){
+        const data = await fetch('https://api.github.com/repos/zyx201207/ac-predictor-zh/contents/changelog.json').then(r => r.json());
+        const binaryString = atob(data.content);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+        const decodedString = new TextDecoder('utf-8').decode(bytes);
+        const changelog = JSON.parse(decodedString);
+        return changelog;
+    }
+/*    const nowVersion = "2.0.12.1";/*/
+    const nowVersion = GM_info.script.version;//*/
+    let versions = await get();
+    let useable = [],nowjson = {};
+    versions.forEach((json) => {
+        if (json.version == nowVersion)
+            nowjson = json;
+    });
+    versions.forEach((json) => {
+        if (json.priority > nowjson.priority)
+            useable.push(json);
+    });
+    if (useable.length){
+//        console.log(useable);
+        let elem = document.createElement("div");
+        elem.style = "top: 0; left: 0; position: fixed; z-index: 998244353; background: #000; opacity: 0.5; min-height: 100%; min-width: 100%;";
+        document.body.append(elem);
+        let elem2 = document.createElement("div");
+        elem2.style = "display: flex; top: 0; left: 0; position: fixed; z-index: 998244354; min-height: 100%; min-width: 100%; align-items: center; justify-content: center;";
+        document.body.append(elem2);
+        elem2.innerHTML =
+`<div style="border-radius: 5px; padding: 16px; background: #fff;"><div style="display: block; min-width: 500px; min-height: 200px; background: #fff; max-height: 550px; overflow: auto;">
+<div id="update_choice_menu" style="flex: 1; justify-content: center; align-item: center;"><hr></div>
+<div id="update_choice_menu" style="display: flex; flex: 1; justify-content: center; align-item: center; text-align: center;">
+<div id="close_no_update" style="display: flex; flex: 0; min-height: 25px; min-width: 100%;"><div style="flex: 1;"></div>
+<button class="btn btn-default" id="no_update">暂不更新</button><div style="flex: 1;"></div>
+</div>
+</div>
+</div></div>`;
+        let elem3 = elem2.querySelector("#update_choice_menu");
+        useable.forEach((json) => {
+//            console.log(json);
+            let elem = document.createElement("div");
+            elem.innerHTML =
+`<h5>版本：${json.version}</h5>
+<p>更新内容：</p>
+<div style=" margin-left: 20%; margin-right: 20%; max-width: 60%; max-height: 200px; border-radius: 5px; border: 1px solid #999; padding: 16px; overflow: auto;">
+<p>${json.message}</p>
+</div>
+<div style="display: flex; flex: 1; align-items: center; justify-content: center; min-height: 50px; min-width: 100%;">
+<div style="flex: 1;"></div>
+<button class="btn btn-default" style="flex: 0;">更新到该版本</button>
+<div style="flex: 1;"></div>
+</div>
+<hr>
+`;
+            elem.querySelector("button").addEventListener("click", () => {window.open(json.url);});
+            elem3.append(elem);
+        });//*/
+        document.getElementById("no_update").addEventListener("click", () => {
+            setConfig("update",false);
+            elem.remove();
+            elem2.remove();
+        });
+    }
+}
+updateVersion();
